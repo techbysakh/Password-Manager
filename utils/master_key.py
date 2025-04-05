@@ -8,6 +8,7 @@ from cryptography.hazmat.backends import default_backend
 
 SALT_FILE = "salt.bin"
 ITERATIONS = 100_000
+KEY_FILE = "key.bin"  # Add this to store the derived key
 
 backend = default_backend()
 
@@ -41,13 +42,20 @@ def setup_master_key():
         if pw1 == pw2:
             salt = generate_salt()
             key = derive_key(pw1, salt)
+            with open(KEY_FILE, "wb") as f:  # Save the derived key to a file
+                f.write(key)
             print("✅ Master password set.")
             return key, pw1
         else:
             print("❗ Passwords do not match. Try again.")
 
 def get_derived_key():
-    salt = get_salt()
+    if os.path.exists(KEY_FILE):
+        with open(KEY_FILE, "rb") as f:
+            return f.read()
+    else:
+        return None
+
+def get_password_input():
     password = getpass.getpass("Enter master password: ")
-    key = derive_key(password, salt)
-    return key, password
+    return password
